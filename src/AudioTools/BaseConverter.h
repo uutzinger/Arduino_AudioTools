@@ -488,7 +488,7 @@ class ChannelReducer : public BaseConverter {
 };
 
 /**
- * @brief Provides reduced sampling rates
+ * @brief Provides reduced sampling rates by taking a sample at every factor location (ingoring factor-1 samples)
  * @ingroup convert
  */
 template <typename T>
@@ -531,7 +531,7 @@ class DecimateT : public BaseConverter {
       }
     }
 
-    LOGD("decimate %d: %d -> %d bytes",factor, (int)size, (int)result_size);
+    LOGD("decimate by %d: %d/%d -> %d/%d bytes/samples %d channels",factor, (int)size, (int)frame_count, (int)result_size, (int)result_size/sizeof(T), channels);
     return result_size;
   }
 
@@ -763,6 +763,8 @@ class BinT : public BaseConverter {
     return result_size;
   }
 
+  operator bool() { return binSize > 1; }
+
  protected:
   int channels = 2;
   int binSize = 1;
@@ -816,6 +818,8 @@ class Bin : public BaseConverter {
       }
     }
   }
+
+  operator bool() { return binSize > 1; }
 
  protected:
   int channels = 2;
@@ -1146,6 +1150,8 @@ class ChannelBinDiffT : public BaseConverter {
     return result_size;
   }
 
+  operator bool() { return binSize > 1; }
+
  protected:
   int channels = 2;
   int binSize = 4;
@@ -1209,6 +1215,8 @@ class ChannelBinDiff : public BaseConverter {
       }
     }
   }
+
+  operator bool() { return binSize > 1; }
 
  protected:
   int channels = 2;

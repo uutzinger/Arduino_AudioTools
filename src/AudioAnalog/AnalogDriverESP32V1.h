@@ -387,12 +387,18 @@ protected:
                 for (int i = 0; i < samples_provided_per_channel; i++) {
                     for (int j = 0; j < self->cfg.channels; j++) {
                         ADC_DATA_TYPE data;
+                        // NEED TO GET THE RIGHT FIFO!!
+
                         self->fifo_buffers[j]->pop(data);
                         if (result16 < end) {
                             if (self->cfg.adc_calibration_active) {
                                 // Provide result in millivolts
                                 auto err = adc_cali_raw_to_voltage(self->adc_cali_handle, (int)data, &data_milliVolts);
                                 if (err == ESP_OK) {
+                                    // https://www.makerfabs.cc/article/cautions-in-using-esp32-adc.html
+                                    if (data_milliVolts < 50 || data_milliVolts > 3300) {
+                                        LOGW("Sample %u Channel %u data %u out of range", i, j, data_milliVolts);
+                                    }
                                     *result16 = static_cast<int16_t>(data_milliVolts);
                                 } else {
                                     LOGE("adc_cali_raw_to_voltage error: %d", err);
@@ -598,7 +604,7 @@ protected:
         auto_center.begin(cfg.channels, cfg.bits_per_sample, true);
 
         // Initialize the FIFO buffers    
-        size_t fifo_size = (cfg.buffer_size / cfg.channels) + 8; // Add a few extra elements
+        size_t fifo_size = (cfg.buffer_size / cfg.channels) + 16; // Add a few extra elements
         fifo_buffers = new FIFO<ADC_DATA_TYPE>*[cfg.channels]; // Allocate an array of FIFO objects
         for (int i = 0; i < cfg.channels; ++i) {
             fifo_buffers[i] = new FIFO<ADC_DATA_TYPE>(fifo_size);
